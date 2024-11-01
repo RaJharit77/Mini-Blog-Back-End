@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import multer from "multer";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -30,25 +31,35 @@ let db;
         driver: sqlite3.Database,
     });
     await db.exec(
-        "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT)"
+        "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT, image TEXT)"
     );
 })();
 
-app.get("/api/posts", async (req, res) => {
-    const posts = await db.all("SELECT * FROM posts");
-    res.json(posts);
+// Endpoint existant pour obtenir tous les posts
+app.get("/api/consultationDesBlogs", async (req, res) => {
+    try {
+        const blogs = await db.all("SELECT * FROM posts");
+        res.json(blogs);
+    } catch (error) {
+        console.error("Error fetching blogs:", error);
+        res.status(500).json({ error: "Failed to fetch blogs" });
+    }
 });
 
-app.post("/api/posts", async (req, res) => {
+const upload = multer({ dest: "uploads/" });
+
+app.post("/api/creationDePublication", upload.single("image"), async (req, res) => {
     const { title, content, author } = req.body;
+    const imagePath = req.file ? req.file.path : null;
+
     const result = await db.run(
-        "INSERT INTO posts (title, content, author) VALUES (?, ?, ?)",
-        title, content, author
+        "INSERT INTO posts (title, content, author, image) VALUES (?, ?, ?, ?)",
+        title, content, author, imagePath
     );
     res.json({ id: result.lastID });
 });
 
-app.delete("/api/posts/:id", async (req, res) => {
+app.delete("/api/consultationDesBlogs/:id", async (req, res) => {
     const { id } = req.params;
     await db.run("DELETE FROM posts WHERE id = ?", id);
     res.status(204).send();
