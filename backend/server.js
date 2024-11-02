@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
-import multer from "multer";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -24,6 +23,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 let db;
 (async () => {
@@ -33,7 +33,7 @@ let db;
     });
 
     await db.exec(
-        "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT, image TEXT)"
+        "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT, subject TEXT)"
     );
     await db.exec(
         "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
@@ -86,19 +86,23 @@ app.post("/api/connexion", async (req, res) => {
     }
 });
 
-const upload = multer({ dest: "uploads/" });
+// Endpoint pour créer
+app.post("/api/creationDePublication", async (req, res) => {
+    const { title, content, author, subject } = req.body;
 
-app.post("/api/creationDePublication", upload.single("image"), async (req, res) => {
-    const { title, content, author } = req.body;
-    const imagePath = req.file ? req.file.path : null;
-
-    const result = await db.run(
-        "INSERT INTO posts (title, content, author, image) VALUES (?, ?, ?, ?)",
-        title, content, author, imagePath
-    );
-    res.json({ id: result.lastID });
+    try {
+        const result = await db.run(
+            "INSERT INTO posts (title, content, author, subject) VALUES (?, ?, ?, ?)",
+            title, content, author, subject
+        );
+        res.status(201).json({ id: result.lastID });
+    } catch (error) {
+        console.error("Erreur lors de la création de la publication:", error);
+        res.status(500).json({ error: "Erreur lors de la création de la publication" });
+    }
 });
 
+// Endpoint pour supprimer
 app.delete("/api/consultationDesBlogs/:id", async (req, res) => {
     const { id } = req.params;
     await db.run("DELETE FROM posts WHERE id = ?", id);
