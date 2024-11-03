@@ -40,11 +40,10 @@ let db;
     );
 })();
 
-
 // Endpoint existant pour obtenir tous les posts
 app.get("/api/consultationDesBlogs", async (req, res) => {
     try {
-        const blogs = await db.all("SELECT * FROM posts");
+        const blogs = await db.all("SELECT *, datetime('now') AS createdAt FROM posts");
         res.json(blogs);
     } catch (error) {
         console.error("Error fetching blogs:", error);
