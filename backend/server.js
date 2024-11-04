@@ -33,21 +33,21 @@ let db;
     });
 
     await db.exec(
-        "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, title TEXT, content TEXT, author TEXT, subject TEXT)"
+        "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
     );
     await db.exec(
         "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
     );
 })();
 
-// Endpoint existant pour obtenir tous les posts
-app.get("/api/consultationDesBlogs", async (req, res) => {
+// Endpoint pour obtenir toutes les tâches
+app.get("/api/tasks", async (req, res) => {
     try {
-        const blogs = await db.all("SELECT *, datetime('now') AS createdAt FROM posts");
-        res.json(blogs);
+        const tasks = await db.all("SELECT * FROM tasks");
+        res.json(tasks);
     } catch (error) {
-        console.error("Error fetching blogs:", error);
-        res.status(500).json({ error: "Failed to fetch blogs" });
+        console.error("Erreur lors de la récupération des tâches:", error);
+        res.status(500).json({ error: "Erreur lors de la récupération des tâches" });
     }
 });
 
@@ -85,27 +85,47 @@ app.post("/api/connexion", async (req, res) => {
     }
 });
 
-// Endpoint pour créer
-app.post("/api/creationDePublication", async (req, res) => {
-    const { title, content, author, subject } = req.body;
-
+// Endpoint pour créer une nouvelle tâche
+app.post("/api/tasks", async (req, res) => {
+    const { title, description, status } = req.body;
     try {
         const result = await db.run(
-            "INSERT INTO posts (title, content, author, subject) VALUES (?, ?, ?, ?)",
-            title, content, author, subject
+            "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
+            title, description, status
         );
         res.status(201).json({ id: result.lastID });
     } catch (error) {
-        console.error("Erreur lors de la création de la publication:", error);
-        res.status(500).json({ error: "Erreur lors de la création de la publication" });
+        console.error("Erreur lors de la création de la tâche:", error);
+        res.status(500).json({ error: "Erreur lors de la création de la tâche" });
     }
 });
 
-// Endpoint pour supprimer
-app.delete("/api/consultationDesBlogs/:id", async (req, res) => {
+// Endpoint pour mettre à jour une tâche
+app.put("/api/tasks/:id", async (req, res) => {
     const { id } = req.params;
-    await db.run("DELETE FROM posts WHERE id = ?", id);
-    res.status(204).send();
+    const { title, description, status } = req.body;
+    try {
+        await db.run(
+            "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
+            title, description, status, id
+        );
+        res.status(200).json({ message: "Tâche mise à jour" });
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour de la tâche:", error);
+        res.status(500).json({ error: "Erreur lors de la mise à jour de la tâche" });
+    }
+});
+
+// Endpoint pour supprimer une tâche
+app.delete("/api/tasks/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.run("DELETE FROM tasks WHERE id = ?", id);
+        res.status(204).send();
+    } catch (error) {
+        console.error("Erreur lors de la suppression de la tâche:", error);
+        res.status(500).json({ error: "Erreur lors de la suppression de la tâche" });
+    }
 });
 
 app.listen(PORT, () => {
