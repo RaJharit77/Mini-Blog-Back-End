@@ -10,8 +10,8 @@
         {
             "src": "/api/(.*)",
             "headers": {
-                "Access-Control-Allow-Origin": "http://localhost:5173",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+                "Access-Control-Allow-Origin": "https://infinitix-task-manager.vercel.app",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, UPDATE",
                 "Access-Control-Allow-Headers": "Content-Type, Authorization"
             },
             "dest": "/backend/server.js"
