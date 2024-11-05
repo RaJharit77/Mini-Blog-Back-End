@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
+import { open } from 'sqlite';
 import sqlite3 from "sqlite3";
 
 const app = express();
@@ -8,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const dbPath = process.env.DB_PATH || './blog.db';
 
-/**let db;
+let db;
 (async () => {
     try {
         db = await open({
@@ -30,10 +31,10 @@ const dbPath = process.env.DB_PATH || './blog.db';
     } catch (error) {
         console.error("Erreur lors de la création des tables:", error);
     }
-})();*/
+})();
 
 //SQLite
-const db = new sqlite3.Database(dbPath, (err) => {
+/*const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Erreur lors de l\'ouverture de la base de données:', err.message);
     } else {
@@ -55,7 +56,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
             )
         `);
     }
-});
+});*/
 
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
