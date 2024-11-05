@@ -125,6 +125,9 @@ app.put("/api/tasks/:id", async (req, res) => {
             "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
             title, description, status, id
         );
+        if (result.changes === 0) {
+            return res.status(404).json({ error: "Tâche non trouvée" });
+        }
         res.status(200).json({ message: "Tâche mise à jour" });
     } catch (error) {
         console.error("Erreur lors de la mise à jour de la tâche:", error);
