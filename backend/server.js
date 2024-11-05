@@ -7,7 +7,11 @@ import sqlite3 from "sqlite3";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = [
+    'https://infinitix-task-manager.vercel.app',
+    'http://localhost:5173'
+];
+
 const corsOptions = {
     origin: (origin, callback) => {
         if (allowedOrigins.includes(origin) || !origin) {
@@ -16,7 +20,7 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'UPDATE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 };
