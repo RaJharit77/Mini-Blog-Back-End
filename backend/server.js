@@ -36,6 +36,7 @@ let db;
 
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
+    'https://infinitix-task-manager.onrender.com',
     'http://localhost:5173'
 ];
 
@@ -60,6 +61,7 @@ app.use('/uploads', express.static('uploads'));
 app.get("/api/tasks", async (req, res) => {
     try {
         const tasks = await db.all("SELECT * FROM tasks");
+        console.log('Tâches récupérées:', tasks);
         res.json(tasks);
     } catch (error) {
         console.error("Erreur lors de la récupération des tâches:", error);
@@ -104,15 +106,18 @@ app.post("/api/connexion", async (req, res) => {
 // Endpoint pour créer une nouvelle tâche
 app.post("/api/tasks", async (req, res) => {
     const { title, description, status } = req.body;
+    console.log("Requête reçue pour ajouter une tâche:", { title, description, status });
+
     try {
         const result = await db.run(
             "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
             title, description, status
         );
+        console.log("Tâche ajoutée avec succès:", result);
         res.status(201).json({ id: result.lastID });
     } catch (error) {
         console.error("Erreur lors de la création de la tâche:", error);
-        res.status(500).json({ error: "Erreur lors de la création de la tâche" });
+        res.status(500).json({ error: "Erreur lors de la création de la tâche", details: error.message });
     }
 });
 
