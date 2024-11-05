@@ -10,17 +10,26 @@ const dbPath = process.env.DB_PATH || './blog.db';
 
 /**let db;
 (async () => {
-    db = await open({
-        filename: "./blog.db",
-        driver: sqlite3.Database,
-    });
+    try {
+        db = await open({
+            filename: "./blog.db",
+            driver: sqlite3.Database,
+        });
+        console.log("Connexion à la base de données réussie.");
+    } catch (error) {
+        console.error("Erreur lors de l'ouverture de la base de données:", error);
+    }
 
-    await db.exec(
-        "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
-    );
-    await db.exec(
-        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
-    );
+    try {
+        await db.exec(
+            "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
+        );
+        await db.exec(
+            "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
+        );
+    } catch (error) {
+        console.error("Erreur lors de la création des tables:", error);
+    }
 })();*/
 
 //SQLite
