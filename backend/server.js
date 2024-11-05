@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const dbPath = process.env.DB_PATH || './blog.db';
 
+//SQLite
 let db;
 (async () => {
     try {
@@ -32,31 +33,6 @@ let db;
         console.error("Erreur lors de la création des tables:", error);
     }
 })();
-
-//SQLite
-/*const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Erreur lors de l\'ouverture de la base de données:', err.message);
-    } else {
-        console.log('Connected to SQLite database.');
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY, 
-            title TEXT, 
-            description TEXT, 
-            status TEXT
-            )
-        `);
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, 
-            username TEXT UNIQUE, 
-            password TEXT
-            )
-        `);
-    }
-});*/
 
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
