@@ -1,11 +1,52 @@
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
-import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 
 const app = express();
+
 const PORT = process.env.PORT || 5000;
+const dbPath = process.env.DB_PATH || './blog.db';
+
+/**let db;
+(async () => {
+    db = await open({
+        filename: "./blog.db",
+        driver: sqlite3.Database,
+    });
+
+    await db.exec(
+        "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
+    );
+    await db.exec(
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
+    );
+})();*/
+
+//SQLite
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Erreur lors de l\'ouverture de la base de données:', err.message);
+    } else {
+        console.log('Connected to SQLite database.');
+
+        db.run(`
+            CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY, 
+            title TEXT, 
+            description TEXT, 
+            status TEXT
+            )
+        `);
+
+        db.run(`
+            CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, 
+            username TEXT UNIQUE, 
+            password TEXT
+            )
+        `);
+    }
+});
 
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
@@ -28,21 +69,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-
-let db;
-(async () => {
-    db = await open({
-        filename: "./blog.db",
-        driver: sqlite3.Database,
-    });
-
-    await db.exec(
-        "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
-    );
-    await db.exec(
-        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
-    );
-})();
 
 // Endpoint pour obtenir toutes les tâches
 app.get("/api/tasks", async (req, res) => {
