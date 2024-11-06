@@ -1,39 +1,46 @@
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
-import { open } from 'sqlite';
 import sqlite3 from "sqlite3";
+import { promisify } from "util";
 
 const app = express();
-
 const PORT = process.env.PORT || 5000;
 const dbPath = process.env.DB_PATH || './blog.db';
 
-//SQLite
-let db;
-(async () => {
-    try {
-        db = await open({
-            filename: dbPath,
-            driver: sqlite3.Database,
-        });
+// Initialisation de la base de données SQLite
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error("Erreur lors de l'ouverture de la base de données:", err.message);
+    } else {
         console.log("Connexion à la base de données réussie.");
-    } catch (error) {
-        console.error("Erreur lors de l'ouverture de la base de données:", error);
-    }
 
-    try {
-        await db.exec(
-            "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, description TEXT, status TEXT)"
-        );
-        await db.exec(
-            "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT UNIQUE, password TEXT)"
-        );
-    } catch (error) {
-        console.error("Erreur lors de la création des tables:", error);
-    }
-})();
+        // Création des tables si elles n'existent pas
+        db.run(`
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                description TEXT,
+                status TEXT
+            )
+        `);
 
+        db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE,
+                password TEXT
+            )
+        `);
+    }
+});
+
+// Promisification des méthodes `db.run`, `db.get`, et `db.all`
+const dbRun = promisify(db.run).bind(db);
+const dbGet = promisify(db.get).bind(db);
+const dbAll = promisify(db.all).bind(db);
+
+// Configuration CORS
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
     'https://infinitix-task-manager.onrender.com',
@@ -55,13 +62,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
 
 // Endpoint pour obtenir toutes les tâches
 app.get("/api/tasks", async (req, res) => {
     try {
-        const tasks = await db.all("SELECT * FROM tasks");
-        console.log('Tâches récupérées:', tasks);
+        const tasks = await dbAll("SELECT * FROM tasks");
         res.json(tasks);
     } catch (error) {
         console.error("Erreur lors de la récupération des tâches:", error);
@@ -72,10 +77,10 @@ app.get("/api/tasks", async (req, res) => {
 // Endpoint d'inscription
 app.post("/api/inscription", async (req, res) => {
     const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10); // Hachage du mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        const result = await db.run(
+        const result = await dbRun(
             "INSERT INTO users (username, password) VALUES (?, ?)",
             username, hashedPassword
         );
@@ -91,7 +96,7 @@ app.post("/api/connexion", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const user = await db.get("SELECT * FROM users WHERE username = ?", username);
+        const user = await dbGet("SELECT * FROM users WHERE username = ?", username);
         if (user && await bcrypt.compare(password, user.password)) {
             res.status(200).json({ message: "Connexion réussie" });
         } else {
@@ -106,14 +111,12 @@ app.post("/api/connexion", async (req, res) => {
 // Endpoint pour créer une nouvelle tâche
 app.post("/api/tasks", async (req, res) => {
     const { title, description, status } = req.body;
-    console.log("Requête reçue pour ajouter une tâche:", { title, description, status });
 
     try {
-        const result = await db.run(
+        const result = await dbRun(
             "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
             title, description, status
         );
-        console.log("Tâche ajoutée avec succès:", result);
         res.status(201).json({ id: result.lastID });
     } catch (error) {
         console.error("Erreur lors de la création de la tâche:", error);
@@ -125,8 +128,9 @@ app.post("/api/tasks", async (req, res) => {
 app.put("/api/tasks/:id", async (req, res) => {
     const { id } = req.params;
     const { title, description, status } = req.body;
+
     try {
-        await db.run(
+        const result = await dbRun(
             "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
             title, description, status, id
         );
@@ -143,8 +147,9 @@ app.put("/api/tasks/:id", async (req, res) => {
 // Endpoint pour supprimer une tâche
 app.delete("/api/tasks/:id", async (req, res) => {
     const { id } = req.params;
+
     try {
-        await db.run("DELETE FROM tasks WHERE id = ?", id);
+        await dbRun("DELETE FROM tasks WHERE id = ?", id);
         res.status(204).send();
     } catch (error) {
         console.error("Erreur lors de la suppression de la tâche:", error);
