@@ -14,7 +14,7 @@ let db;
 (async () => {
     try {
         db = await open({
-            filename: "./blog.db",
+            filename: dbPath,
             driver: sqlite3.Database,
         });
         console.log("Connexion à la base de données réussie.");
