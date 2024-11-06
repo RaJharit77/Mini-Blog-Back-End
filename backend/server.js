@@ -1,44 +1,28 @@
+import AlaSQL from "alasql";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
-import sqlite3 from "sqlite3";
-import { promisify } from "util";
+
+// Initialisation d'AlaSQL
+const alasql = AlaSQL;
+alasql(`
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INT AUTOINCREMENT PRIMARY KEY,
+        title STRING,
+        description STRING,
+        status STRING
+    )
+`);
+alasql(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTOINCREMENT PRIMARY KEY,
+        username STRING UNIQUE,
+        password STRING
+    )
+`);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const dbPath = process.env.DB_PATH || './blog.db';
-
-// Initialisation de la base de données SQLite
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error("Erreur lors de l'ouverture de la base de données:", err.message);
-    } else {
-        console.log("Connexion à la base de données réussie.");
-
-        // Création des tables si elles n'existent pas
-        db.run(`
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT,
-                description TEXT,
-                status TEXT
-            )
-        `);
-
-        db.run(`
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE,
-                password TEXT
-            )
-        `);
-    }
-});
-
-// Promisification des méthodes `db.run`, `db.get`, et `db.all`
-const dbRun = promisify(db.run).bind(db);
-const dbGet = promisify(db.get).bind(db);
-const dbAll = promisify(db.all).bind(db);
 
 // Configuration CORS
 const allowedOrigins = [
@@ -46,7 +30,6 @@ const allowedOrigins = [
     'https://infinitix-task-manager.onrender.com',
     'http://localhost:5173'
 ];
-
 const corsOptions = {
     origin: (origin, callback) => {
         if (allowedOrigins.includes(origin) || !origin) {
@@ -64,9 +47,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Endpoint pour obtenir toutes les tâches
-app.get("/api/tasks", async (req, res) => {
+app.get("/api/tasks", (req, res) => {
     try {
-        const tasks = await dbAll("SELECT * FROM tasks");
+        const tasks = alasql("SELECT * FROM tasks");
         res.json(tasks);
     } catch (error) {
         console.error("Erreur lors de la récupération des tâches:", error);
@@ -80,11 +63,8 @@ app.post("/api/inscription", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        const result = await dbRun(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            username, hashedPassword
-        );
-        res.status(201).json({ id: result.lastID });
+        alasql("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword]);
+        res.status(201).json({ message: "Inscription réussie" });
     } catch (error) {
         console.error("Erreur lors de l'inscription:", error);
         res.status(500).json({ error: "Erreur lors de la création du compte" });
@@ -96,7 +76,7 @@ app.post("/api/connexion", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const user = await dbGet("SELECT * FROM users WHERE username = ?", username);
+        const user = alasql("SELECT * FROM users WHERE username = ?", [username])[0];
         if (user && await bcrypt.compare(password, user.password)) {
             res.status(200).json({ message: "Connexion réussie" });
         } else {
@@ -109,32 +89,26 @@ app.post("/api/connexion", async (req, res) => {
 });
 
 // Endpoint pour créer une nouvelle tâche
-app.post("/api/tasks", async (req, res) => {
+app.post("/api/tasks", (req, res) => {
     const { title, description, status } = req.body;
 
     try {
-        const result = await dbRun(
-            "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
-            title, description, status
-        );
-        res.status(201).json({ id: result.lastID });
+        alasql("INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)", [title, description, status]);
+        res.status(201).json({ message: "Tâche créée" });
     } catch (error) {
         console.error("Erreur lors de la création de la tâche:", error);
-        res.status(500).json({ error: "Erreur lors de la création de la tâche", details: error.message });
+        res.status(500).json({ error: "Erreur lors de la création de la tâche" });
     }
 });
 
 // Endpoint pour mettre à jour une tâche
-app.put("/api/tasks/:id", async (req, res) => {
+app.put("/api/tasks/:id", (req, res) => {
     const { id } = req.params;
     const { title, description, status } = req.body;
 
     try {
-        const result = await dbRun(
-            "UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?",
-            title, description, status, id
-        );
-        if (result.changes === 0) {
+        const result = alasql("UPDATE tasks SET title = ?, description = ?, status = ? WHERE id = ?", [title, description, status, parseInt(id)]);
+        if (result === 0) {
             return res.status(404).json({ error: "Tâche non trouvée" });
         }
         res.status(200).json({ message: "Tâche mise à jour" });
@@ -145,11 +119,11 @@ app.put("/api/tasks/:id", async (req, res) => {
 });
 
 // Endpoint pour supprimer une tâche
-app.delete("/api/tasks/:id", async (req, res) => {
+app.delete("/api/tasks/:id", (req, res) => {
     const { id } = req.params;
 
     try {
-        await dbRun("DELETE FROM tasks WHERE id = ?", id);
+        alasql("DELETE FROM tasks WHERE id = ?", [parseInt(id)]);
         res.status(204).send();
     } catch (error) {
         console.error("Erreur lors de la suppression de la tâche:", error);
