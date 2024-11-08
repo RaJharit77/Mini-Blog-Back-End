@@ -24,12 +24,16 @@ alasql(`
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Version de l'application
+const APP_VERSION = '1.0.0';
+
 // Configuration CORS
 const allowedOrigins = [
     'https://infinitix-task-manager.vercel.app',
     'https://infinitix-task-manager.onrender.com',
     'http://localhost:5173'
 ];
+
 const corsOptions = {
     origin: (origin, callback) => {
         if (allowedOrigins.includes(origin) || !origin) {
@@ -45,6 +49,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Endpoint pour obtenir la version de l'application
+app.get('/api/version', (req, res) => {
+    res.json({ version: APP_VERSION });
+});
 
 // Endpoint pour obtenir toutes les tâches
 app.get("/api/tasks", (req, res) => {
