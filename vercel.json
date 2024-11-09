@@ -2,24 +2,29 @@
     "version": 2,
     "builds": [
         {
-            "src": "api/server.js",
+            "src": "backend/server.js",
             "use": "@vercel/node"
         }
     ],
     "routes": [
         {
-            "src": "/api/tasks(.*)",
-            "dest": "/api/server.js"
-        },
-        {
-            "src": "/api/tasks/stats(.*)",
-            "dest": "/api/server.js"
+            "src": "/api/(.*)",
+            "headers": {
+                "Access-Control-Allow-Origin": "https://infinitix-task-manager.vercel.app",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, UPDATE, HEAD",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            },
+            "dest": "/backend/server.js"
         },
         {
             "handle": "filesystem"
         },
         {
             "src": "/*",
+            "dest": "/index.html"
+        },
+        {
+            "src": "/(.*)",
             "dest": "/index.html"
         }
     ]
