@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "server": "nodemon ./backend/server.js"
+    "server": "nodemon ./backend/api/server.js"
   },
   "keywords": [],
   "author": "RaJharit77",

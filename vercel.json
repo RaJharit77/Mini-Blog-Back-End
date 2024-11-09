@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
         {
-            "src": "backend/server.js",
+            "src": "backend/api/server.js",
             "use": "@vercel/node"
         }
     ],
@@ -14,7 +14,7 @@
                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, UPDATE",
                 "Access-Control-Allow-Headers": "Content-Type, Authorization"
             },
-            "dest": "/backend/server.js"
+            "dest": "/backend/api/server.js"
         },
         {
             "handle": "filesystem"
