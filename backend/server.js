@@ -51,12 +51,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Endpoint pour obtenir la version de l'application
-app.get('/version', (req, res) => {
+app.get('/api/version', (req, res) => {
     res.json({ version: APP_VERSION });
 });
 
 // Endpoint pour obtenir toutes les tâches
-app.get("/tasks", (req, res) => {
+app.get("/api/tasks", (req, res) => {
     try {
         const tasks = alasql("SELECT * FROM tasks");
         res.json(tasks);
@@ -67,7 +67,7 @@ app.get("/tasks", (req, res) => {
 });
 
 // Endpoint d'inscription
-app.post("/inscription", async (req, res) => {
+app.post("/api/inscription", async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -81,7 +81,7 @@ app.post("/inscription", async (req, res) => {
 });
 
 // Endpoint de connexion
-app.post("/connexion", async (req, res) => {
+app.post("/api/connexion", async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -98,7 +98,7 @@ app.post("/connexion", async (req, res) => {
 });
 
 // Endpoint pour créer une nouvelle tâche
-app.post("/tasks", (req, res) => {
+app.post("/api/tasks", (req, res) => {
     const { title, description, status } = req.body;
 
     try {
@@ -111,7 +111,7 @@ app.post("/tasks", (req, res) => {
 });
 
 // Endpoint pour mettre à jour une tâche
-app.put("/tasks/:id", (req, res) => {
+app.put("/api/tasks/:id", (req, res) => {
     const { id } = req.params;
     const { title, description, status } = req.body;
 
@@ -128,7 +128,7 @@ app.put("/tasks/:id", (req, res) => {
 });
 
 // Endpoint pour supprimer une tâche
-app.delete("/tasks/:id", (req, res) => {
+app.delete("/api/tasks/:id", (req, res) => {
     const { id } = req.params;
 
     try {
