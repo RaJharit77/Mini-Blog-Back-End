@@ -4,3 +4,6 @@ node_modules
 
 # Fichier SQLite
 blog.db
+
+# JSON
+save.json
