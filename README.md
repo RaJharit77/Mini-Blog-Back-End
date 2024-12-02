@@ -20,7 +20,3 @@ Voici le lien du site web déployé sur render(https://render.com):
 
 Infinitix Task: https://infinitix-task-manager.onrender.com
 
-### Le lien du déploiement du projet sur vercel
-Voici le lien du site web déployé sur vercel(https://vercel.com):
-
-Infinitix Task: https://infinitix-task-manager.vercel.app
